@@ -3,6 +3,7 @@ import cors from "cors";
 import "dotenv/config";
 import authRoutes from "./routes/auth.routes";
 import notesRoutes from "./routes/notes.routes";
+import tagsRoutes from "./routes/tags.routes";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,6 +14,7 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
+app.use("/api/tags", tagsRoutes);
 
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });

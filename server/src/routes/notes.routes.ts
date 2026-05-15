@@ -8,6 +8,7 @@ import {
   deleteNote,
   shareNote,
 } from "../controllers/notes.controller";
+import { attachTagToNote, removeTagFromNote } from "../controllers/tags.controller";
 
 const router = Router();
 
@@ -20,5 +21,7 @@ router.post("/", createNote);
 router.put("/:id", updateNote);
 router.delete("/:id", deleteNote);
 router.post("/:id/share", shareNote);
+router.post("/:id/tags", attachTagToNote);
+router.delete("/:id/tags/:tagId", removeTagFromNote);
 
 export default router;

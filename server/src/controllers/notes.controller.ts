@@ -23,15 +23,26 @@ export const getNotes = async (req: Request, res: Response) => {
     const userId = req.user!.userId;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
+    const tag = req.query.tag as string;
     const skip = (page - 1) * limit;
 
-    const whereClause = {
+    const whereClause: any = {
       OR: [
         { ownerId: userId },
         { sharedWith: { some: { sharedWithUserId: userId } } },
       ],
       isDeleted: false,
     };
+
+    if (tag) {
+      whereClause.tags = {
+        some: {
+          tag: {
+            name: tag,
+          },
+        },
+      };
+    }
 
     const [notes, total] = await Promise.all([
       prisma.note.findMany({
