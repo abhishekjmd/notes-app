@@ -14,6 +14,10 @@ const updateNoteSchema = z.object({
   isPinned: z.boolean().optional(),
 });
 
+const shareSchema = z.object({
+  share_with_email: z.string().email(),
+});
+
 export const getNotes = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -166,6 +170,66 @@ export const deleteNote = async (req: Request, res: Response) => {
     return res.status(204).send();
   } catch (error) {
     console.error("Delete note error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const shareNote = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.userId;
+    const { share_with_email } = shareSchema.parse(req.body);
+
+    const note = await prisma.note.findUnique({
+      where: { id },
+    });
+
+    if (!note) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    if (note.ownerId !== userId) {
+      return res.status(403).json({ message: "Only owners can share notes" });
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { email: share_with_email },
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({ message: "Target user not found" });
+    }
+
+    if (targetUser.id === userId) {
+      return res.status(400).json({ message: "Cannot share a note with yourself" });
+    }
+
+    const existingShare = await prisma.noteShare.findUnique({
+      where: {
+        noteId_sharedWithUserId: {
+          noteId: id,
+          sharedWithUserId: targetUser.id,
+        },
+      },
+    });
+
+    if (existingShare) {
+      return res.status(400).json({ message: "Note already shared with this user" });
+    }
+
+    await prisma.noteShare.create({
+      data: {
+        noteId: id,
+        sharedWithUserId: targetUser.id,
+      },
+    });
+
+    return res.status(200).json({ message: "Note shared successfully" });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: error.errors[0].message });
+    }
+    console.error("Share note error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

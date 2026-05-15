@@ -6,6 +6,7 @@ import {
   createNote,
   updateNote,
   deleteNote,
+  shareNote,
 } from "../controllers/notes.controller";
 
 const router = Router();
@@ -18,5 +19,6 @@ router.get("/:id", getNoteById);
 router.post("/", createNote);
 router.put("/:id", updateNote);
 router.delete("/:id", deleteNote);
+router.post("/:id/share", shareNote);
 
 export default router;
