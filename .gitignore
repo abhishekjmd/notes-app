@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+**/.next/
+
+# Environment files - NEVER push these
+.env
+**/.env
+.env.local
+**/.env.local
+.env.production
+**/.env.production
+
+# Prisma engine binaries
+server/node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
