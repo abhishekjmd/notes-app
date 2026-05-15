@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String      @id @default(cuid())
+  email       String      @unique
+  password    String
+  createdAt   DateTime    @default(now())
+  notes       Note[]      @relation("UserNotes")
+  sharedNotes NoteShare[] @relation("SharedWithUser")
+  tags        Tag[]
+
+  @@map("users")
+}
+
+model Note {
+  id         String      @id @default(uuid())
+  title      String
+  content    String      @db.Text
+  isPinned   Boolean     @default(false)
+  isDeleted  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  ownerId    String
+  owner      User        @relation("UserNotes", fields: [ownerId], references: [id])
+  sharedWith NoteShare[]
+  tags       NoteTag[]
+
+  @@map("notes")
+}
+
+model NoteShare {
+  id               String @id @default(cuid())
+  noteId           String
+  note             Note   @relation(fields: [noteId], references: [id])
+  sharedWithUserId String
+  sharedWithUser   User   @relation("SharedWithUser", fields: [sharedWithUserId], references: [id])
+
+  @@unique([noteId, sharedWithUserId])
+  @@map("note_shares")
+}
+
+model Tag {
+  id     String    @id @default(cuid())
+  name   String
+  userId String
+  user   User      @relation(fields: [userId], references: [id])
+  notes  NoteTag[]
+
+  @@unique([name, userId])
+  @@map("tags")
+}
+
+model NoteTag {
+  noteId String
+  note   Note   @relation(fields: [noteId], references: [id])
+  tagId  String
+  tag    Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([noteId, tagId])
+  @@unique([noteId, tagId])
+  @@map("note_tags")
+}
