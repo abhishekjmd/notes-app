@@ -1,5 +1,5 @@
-import { Response } from "express";
-import { Prisma } from "../generated/prisma";
+import type { Response } from "express";
+import { Prisma } from "@prisma/client";
 
 export const handlePrismaError = (error: any, res: Response) => {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {

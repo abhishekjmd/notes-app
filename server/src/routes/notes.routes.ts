@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/authenticate";
+import { authenticate } from "../middlewares/authenticate.js";
 import {
   getNotes,
   getNoteById,
@@ -7,8 +7,8 @@ import {
   updateNote,
   deleteNote,
   shareNote,
-} from "../controllers/notes.controller";
-import { attachTagToNote, removeTagFromNote } from "../controllers/tags.controller";
+} from "../controllers/notes.controller.js";
+import { attachTagToNote, removeTagFromNote } from "../controllers/tags.controller.js";
 
 const router = Router();
 

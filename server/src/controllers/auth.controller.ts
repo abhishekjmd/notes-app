@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { z } from "zod";
-import { prisma } from "../lib/prisma";
-import { hashPassword, comparePassword } from "../utils/hash";
-import { signToken } from "../utils/jwt";
-import { handlePrismaError } from "../utils/prismaErrors";
+import { prisma } from "../utils/prismaClient.js";
+import { hashPassword, comparePassword } from "../utils/hash.js";
+import { signToken } from "../utils/jwt.js";
+import { handlePrismaError } from "../utils/prismaErrors.js";
 
 const registerSchema = z.object({
   email: z.string().email(),

@@ -1,13 +1,13 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import authRoutes from "./routes/auth.routes";
-import notesRoutes from "./routes/notes.routes";
-import tagsRoutes from "./routes/tags.routes";
-import searchRoutes from "./routes/search.routes";
-import metaRoutes from "./routes/meta.routes";
-import { notFound } from "./middlewares/notFound";
-import { errorHandler } from "./middlewares/errorHandler";
+import authRoutes from "./routes/auth.routes.js";
+import notesRoutes from "./routes/notes.routes.js";
+import tagsRoutes from "./routes/tags.routes.js";
+import searchRoutes from "./routes/search.routes.js";
+import metaRoutes from "./routes/meta.routes.js";
+import { notFound } from "./middlewares/notFound.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { z } from "zod";
-import { prisma } from "../lib/prisma";
+import { prisma } from "../utils/prismaClient.js";
 
 const tagSchema = z.object({
   name: z.string().min(1, "Tag name is required"),

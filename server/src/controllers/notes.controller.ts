@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { z } from "zod";
-import { prisma } from "../lib/prisma";
-import { handlePrismaError } from "../utils/prismaErrors";
+import { prisma } from "../utils/prismaClient.js";
+import { handlePrismaError } from "../utils/prismaErrors.js";
 
 const noteSchema = z.object({
   title: z.string().min(1, "Title is required"),
