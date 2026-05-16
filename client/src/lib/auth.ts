@@ -28,7 +28,7 @@ export const getCurrentUserId = (): string | null => {
   if (!token) return null;
   try {
     const decoded: any = jwtDecode(token);
-    return decoded.id || decoded.sub || null;
+    return decoded.userId || decoded.id || decoded.sub || null;
   } catch (error) {
     return null;
   }
