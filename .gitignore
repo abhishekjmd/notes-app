@@ -7,6 +7,18 @@ dist/
 build/
 **/.next/
 
+# Next.js unnecessary init files
+client/public/file.svg
+client/public/globe.svg
+client/public/next.svg
+client/public/vercel.svg
+client/public/window.svg
+client/AGENTS.md
+client/CLAUDE.md
+
+# Next.js build output
+client/out/
+
 # Environment files - NEVER push these
 .env
 **/.env
