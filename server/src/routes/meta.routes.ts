@@ -313,15 +313,15 @@ const openApiSpec = {
 
 router.get("/about", (req: Request, res: Response) => {
   res.json({
-    name: "Abhishek",
-    email: "your@email.com",
+    "name": "Abhishek",
+    "email": "abhishektiwariisro1278@gmail.com",
     "my features": {
-      note_pinning: "Mark important notes to keep them at the top of the list.",
-      soft_delete: "Notes are flagged as deleted instead of being immediately removed, allowing for data recovery.",
-      tagging: "User-scoped categorization system for organizing and filtering notes.",
-      full_text_search: "Case-insensitive search across note titles and content for efficient discovery.",
-      rate_limiting: "IP-based request limiting on authentication endpoints to prevent brute-force attacks.",
-    },
+      "Note Pinning": "Mark important notes to keep them at the top of the list. Chosen to improve UX for users with many notes.",
+      "Soft Delete": "Notes are flagged as deleted instead of being removed, allowing future recovery. Chosen because real apps like Google Keep never hard delete immediately.",
+      "Tagging System": "User-scoped tags for organizing and filtering notes. Chosen to add meaningful categorization without overcomplicating the data model.",
+      "Full Text Search": "Case-insensitive search across note titles and content. Chosen as it is a core UX feature for any notes app.",
+      "Rate Limiting": "IP-based request limiting on auth endpoints to prevent brute-force attacks. Chosen to add a basic but important security layer."
+    }
   });
 });
 
