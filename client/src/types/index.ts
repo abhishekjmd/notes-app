@@ -3,6 +3,12 @@ export interface User {
   email: string;
 }
 
+export interface Tag {
+  id: string;
+  name: string;
+  userId: string;
+}
+
 export interface Note {
   id: string;
   title: string;
@@ -11,6 +17,7 @@ export interface Note {
   updated_at: string;
   isPinned: boolean;
   ownerId: string;
+  tags?: Tag[];
 }
 
 export interface AuthResponse {

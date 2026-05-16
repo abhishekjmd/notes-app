@@ -86,6 +86,25 @@ export const NoteCard: React.FC<NoteCardProps> = ({ note, onEdit, onDelete, onTo
           {note.content || <span style={{ color: 'var(--foreground-subtle)', fontStyle: 'italic' }}>No content</span>}
         </p>
 
+        {/* Tags */}
+        {note.tags && note.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {note.tags.map(tag => (
+              <span
+                key={tag.id}
+                className="px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider"
+                style={{ 
+                  background: 'rgba(124,106,247,0.1)', 
+                  color: 'var(--primary-light)',
+                  border: '1px solid rgba(124,106,247,0.2)' 
+                }}
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Footer */}
         <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border)' }}>
           <span className="text-[11px] font-medium tracking-wide" style={{ color: 'var(--foreground-subtle)' }}>

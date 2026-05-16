@@ -12,7 +12,7 @@ import { Note } from '@/types';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { notes, loading, fetchNotes } = useNotes();
+  const { notes, tags, loading, fetchNotes } = useNotes();
 
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -24,7 +24,7 @@ export default function DashboardPage() {
     if (!isLoggedIn()) router.replace('/login');
   }, [router]);
 
-  const handleSearch = useCallback((q: string) => fetchNotes(q || undefined), [fetchNotes]);
+  const handleSearch = useCallback((q: string) => fetchNotes(q ? { query: q } : undefined), [fetchNotes]);
 
   const handleEdit = (note: Note) => {
     setEditingNote(note);
@@ -116,9 +116,33 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Toolbar: Search ─────────────────────────── */}
-        <div className="flex items-center gap-3 animate-fade-in">
+        {/* ── Toolbar: Search & Tags ────────────────────── */}
+        <div className="flex flex-col gap-4 animate-fade-in">
           <SearchBar onSearch={handleSearch} />
+          
+          {tags.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <button
+                onClick={() => handleSearch('')}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                  !notes.length ? 'bg-[var(--primary)] text-white' : 'bg-[var(--surface-raised)] text-[var(--foreground-muted)] hover:text-white'
+                }`}
+                style={{ border: '1px solid var(--border)' }}
+              >
+                All
+              </button>
+              {tags.map(tag => (
+                <button
+                  key={tag.id}
+                  onClick={() => fetchNotes({ tag: tag.name })}
+                  className="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-[var(--surface-raised)] text-[var(--foreground-muted)] hover:text-white transition-colors"
+                  style={{ border: '1px solid var(--border)' }}
+                >
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ── Notes Grid ──────────────────────────────── */}

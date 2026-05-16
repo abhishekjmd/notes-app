@@ -20,11 +20,12 @@ const shareSchema = z.object({
 });
 
 const formatNote = (note: any) => {
-  const { createdAt, updatedAt, ...rest } = note;
+  const { createdAt, updatedAt, tags, ...rest } = note;
   return {
     ...rest,
     created_at: createdAt,
     updated_at: updatedAt,
+    tags: tags?.map((t: any) => t.tag) || [],
   };
 };
 
@@ -61,6 +62,13 @@ export const getNotes = async (req: Request, res: Response) => {
           { isPinned: "desc" },
           { createdAt: "desc" },
         ],
+        include: {
+          tags: {
+            include: {
+              tag: true,
+            },
+          },
+        },
         skip,
         take: limit,
       }),
@@ -86,6 +94,13 @@ export const getNoteById = async (req: Request, res: Response) => {
           { sharedWith: { some: { sharedWithUserId: userId } } },
         ],
         isDeleted: false,
+      },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
 

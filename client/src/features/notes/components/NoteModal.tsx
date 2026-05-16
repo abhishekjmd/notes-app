@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createNote, updateNote } from '../services/noteService';
+import { createNote, updateNote, getTags, createTag, attachTag, removeTag } from '../services/noteService';
 import { Note } from '@/types';
 
 interface NoteModalProps {
@@ -19,6 +19,8 @@ const inputBase = `
 export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, onSuccess, initialData }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isEdit = !!initialData;
@@ -27,14 +29,32 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, onSuccess
     if (initialData) {
       setTitle(initialData.title);
       setContent(initialData.content);
+      setTags(initialData.tags?.map(t => t.name) || []);
     } else {
       setTitle('');
       setContent('');
+      setTags([]);
     }
+    setTagInput('');
     setError(null);
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
+
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = tagInput.trim().toLowerCase();
+      if (val && !tags.includes(val)) {
+        setTags([...tags, val]);
+      }
+      setTagInput('');
+    }
+  };
+
+  const removeLocalTag = (tagToRemove: string) => {
+    setTags(tags.filter(t => t !== tagToRemove));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,11 +62,39 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, onSuccess
     setLoading(true);
     setError(null);
     try {
+      let savedNoteId = initialData?.id;
+
       if (isEdit && initialData) {
         await updateNote(initialData.id, { title, content });
+        // Remove tags that were deleted
+        const tagsToRemove = initialData.tags?.filter(t => !tags.includes(t.name)) || [];
+        for (const t of tagsToRemove) {
+          try { await removeTag(initialData.id, t.id); } catch {}
+        }
       } else {
-        await createNote({ title, content });
+        const note = await createNote({ title, content });
+        savedNoteId = note.id;
       }
+
+      // Handle adding new tags
+      if (savedNoteId && tags.length > 0) {
+        let availableTags = await getTags();
+        for (const tagName of tags) {
+          let tagRecord = availableTags.find(t => t.name === tagName);
+          if (!tagRecord) {
+            try {
+              tagRecord = await createTag(tagName);
+            } catch {
+              availableTags = await getTags();
+              tagRecord = availableTags.find(t => t.name === tagName);
+            }
+          }
+          if (tagRecord) {
+            try { await attachTag(savedNoteId, tagRecord.id); } catch {}
+          }
+        }
+      }
+
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -67,7 +115,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, onSuccess
 
       {/* Panel */}
       <div
-        className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden animate-fade-in-scale"
+        className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden animate-fade-in-scale flex flex-col max-h-[90vh]"
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--border)',
@@ -75,11 +123,11 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, onSuccess
         }}
       >
         {/* Gradient accent top */}
-        <div className="h-[1px] w-full"
+        <div className="shrink-0 h-[1px] w-full"
           style={{ background: 'linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent)' }} />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+        <div className="shrink-0 flex items-center justify-between px-6 pt-6 pb-4">
           <div>
             <h2 className="text-lg font-bold text-foreground">
               {isEdit ? 'Edit Note' : 'New Note'}
@@ -102,9 +150,9 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, onSuccess
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 pb-6 space-y-4">
           {error && (
-            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs"
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs shrink-0"
               style={{ background: 'var(--destructive-bg)', border: '1px solid var(--destructive-border)', color: 'var(--destructive)' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -134,7 +182,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, onSuccess
           <div>
             <textarea
               placeholder="What's on your mind?"
-              rows={6}
+              rows={4}
               className={`${inputBase} py-3 resize-none`}
               style={{
                 background: 'var(--surface-raised)',
@@ -149,7 +197,40 @@ export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, onSuccess
             />
           </div>
 
-          <div className="flex gap-3 pt-1">
+          {/* Tags Section */}
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              {tags.map(tag => (
+                <span
+                  key={tag}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium uppercase tracking-wider"
+                  style={{ background: 'rgba(124,106,247,0.1)', color: 'var(--primary-light)', border: '1px solid rgba(124,106,247,0.2)' }}
+                >
+                  {tag}
+                  <button type="button" onClick={() => removeLocalTag(tag)} className="hover:text-white transition-colors">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+            <input
+              type="text"
+              placeholder="Add tags (press Enter)"
+              className={`${inputBase} h-10 text-xs`}
+              style={{
+                background: 'var(--background)',
+                border: '1px solid var(--border)',
+              }}
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleAddTag}
+              disabled={loading}
+              onFocus={e => (e.currentTarget.style.borderColor = 'var(--primary)')}
+              onBlur={e => (e.currentTarget.style.borderColor = 'var(--border)')}
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2 shrink-0">
             <button
               type="button"
               onClick={onClose}
