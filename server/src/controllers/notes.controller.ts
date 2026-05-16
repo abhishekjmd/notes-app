@@ -19,6 +19,15 @@ const shareSchema = z.object({
   share_with_email: z.string().email(),
 });
 
+const formatNote = (note: any) => {
+  const { createdAt, updatedAt, ...rest } = note;
+  return {
+    ...rest,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  };
+};
+
 export const getNotes = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -45,7 +54,7 @@ export const getNotes = async (req: Request, res: Response) => {
       };
     }
 
-    const [notes, total] = await Promise.all([
+    const [notes] = await Promise.all([
       prisma.note.findMany({
         where: whereClause,
         orderBy: [
@@ -58,12 +67,7 @@ export const getNotes = async (req: Request, res: Response) => {
       prisma.note.count({ where: whereClause }),
     ]);
 
-    return res.status(200).json({
-      data: notes,
-      total,
-      page,
-      limit,
-    });
+    return res.status(200).json(notes.map(formatNote));
   } catch (error) {
     return handlePrismaError(error, res);
   }
@@ -92,7 +96,7 @@ export const getNoteById = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    return res.status(200).json(note);
+    return res.status(200).json(formatNote(note));
   } catch (error) {
     return handlePrismaError(error, res);
   }
@@ -112,7 +116,7 @@ export const createNote = async (req: Request, res: Response) => {
       },
     });
 
-    return res.status(201).json(note);
+    return res.status(201).json(formatNote(note));
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: error.errors[0].message });
@@ -144,7 +148,7 @@ export const updateNote = async (req: Request, res: Response) => {
       data,
     });
 
-    return res.status(200).json(updatedNote);
+    return res.status(200).json(formatNote(updatedNote));
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: error.errors[0].message });

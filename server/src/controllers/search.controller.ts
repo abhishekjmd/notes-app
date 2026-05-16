@@ -1,6 +1,15 @@
 import type { Request, Response } from "express";
 import { prisma } from "../utils/prismaClient.js";
 
+const formatNote = (note: any) => {
+  const { createdAt, updatedAt, ...rest } = note;
+  return {
+    ...rest,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  };
+};
+
 export const searchNotes = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
@@ -30,7 +39,7 @@ export const searchNotes = async (req: Request, res: Response) => {
       ],
     };
 
-    const [notes, total] = await Promise.all([
+    const [notes] = await Promise.all([
       prisma.note.findMany({
         where: whereClause,
         orderBy: [
@@ -43,12 +52,7 @@ export const searchNotes = async (req: Request, res: Response) => {
       prisma.note.count({ where: whereClause }),
     ]);
 
-    return res.status(200).json({
-      data: notes,
-      total,
-      page,
-      limit,
-    });
+    return res.status(200).json(notes.map(formatNote));
   } catch (error) {
     console.error("Search notes error:", error);
     return res.status(500).json({ message: "Internal server error" });

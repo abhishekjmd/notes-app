@@ -12,7 +12,7 @@ const openApiSpec = {
   },
   servers: [
     {
-      url: "/api",
+      url: "/",
       description: "Base API path",
     },
   ],
@@ -34,8 +34,8 @@ const openApiSpec = {
           isPinned: { type: "boolean" },
           isDeleted: { type: "boolean" },
           ownerId: { type: "string" },
-          createdAt: { type: "string", format: "date-time" },
-          updatedAt: { type: "string", format: "date-time" },
+          created_at: { type: "string", format: "date-time" },
+          updated_at: { type: "string", format: "date-time" },
         },
       },
       Error: {
@@ -47,7 +47,7 @@ const openApiSpec = {
     },
   },
   paths: {
-    "/auth/register": {
+    "/register": {
       post: {
         summary: "Register a new user",
         tags: ["Auth"],
@@ -67,12 +67,22 @@ const openApiSpec = {
           },
         },
         responses: {
-          201: { description: "User registered successfully" },
+          201: { 
+            description: "User registered successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { message: { type: "string" } }
+                }
+              }
+            }
+          },
           400: { description: "Invalid input or email already exists" },
         },
       },
     },
-    "/auth/login": {
+    "/login": {
       post: {
         summary: "Login a user",
         tags: ["Auth"],
@@ -99,26 +109,19 @@ const openApiSpec = {
                 schema: {
                   type: "object",
                   properties: {
-                    token: { type: "string" },
-                    user: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        email: { type: "string" },
-                      },
-                    },
+                    access_token: { type: "string" },
                   },
                 },
               },
             },
           },
-          401: { description: "Invalid credentials" },
+          401: { description: "Invalid email or password" },
         },
       },
     },
     "/notes": {
       get: {
-        summary: "Get all notes (paginated)",
+        summary: "Get all notes",
         tags: ["Notes"],
         security: [{ BearerAuth: [] }],
         parameters: [
@@ -128,17 +131,12 @@ const openApiSpec = {
         ],
         responses: {
           200: {
-            description: "List of notes",
+            description: "Array of notes",
             content: {
               "application/json": {
                 schema: {
-                  type: "object",
-                  properties: {
-                    data: { type: "array", items: { $ref: "#/components/schemas/Note" } },
-                    total: { type: "integer" },
-                    page: { type: "integer" },
-                    limit: { type: "integer" },
-                  },
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Note" }
                 },
               },
             },
@@ -185,9 +183,10 @@ const openApiSpec = {
             content: { "application/json": { schema: { $ref: "#/components/schemas/Note" } } },
           },
           404: { description: "Note not found" },
+          403: { description: "Access denied" },
         },
       },
-      patch: {
+      put: {
         summary: "Update a note",
         tags: ["Notes"],
         security: [{ BearerAuth: [] }],
@@ -219,7 +218,8 @@ const openApiSpec = {
         security: [{ BearerAuth: [] }],
         parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
         responses: {
-          204: { description: "Note deleted" },
+          204: { description: "No Content" },
+          403: { description: "Only owners can delete" },
         },
       },
     },
@@ -244,32 +244,16 @@ const openApiSpec = {
           },
         },
         responses: {
-          200: { description: "Note shared successfully" },
-        },
-      },
-    },
-    "/tags": {
-      get: {
-        summary: "Get all tags for the user",
-        tags: ["Tags"],
-        security: [{ BearerAuth: [] }],
-        responses: {
-          200: {
-            description: "List of tags",
+          200: { 
+            description: "Note shared successfully",
             content: {
               "application/json": {
                 schema: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      id: { type: "string" },
-                      name: { type: "string" },
-                    },
-                  },
-                },
-              },
-            },
+                  type: "object",
+                  properties: { message: { type: "string" } }
+                }
+              }
+            }
           },
         },
       },
@@ -281,8 +265,6 @@ const openApiSpec = {
         security: [{ BearerAuth: [] }],
         parameters: [
           { name: "q", in: "query", required: true, schema: { type: "string" } },
-          { name: "page", in: "query", schema: { type: "integer" } },
-          { name: "limit", in: "query", schema: { type: "integer" } },
         ],
         responses: {
           200: {
@@ -290,11 +272,8 @@ const openApiSpec = {
             content: {
               "application/json": {
                 schema: {
-                  type: "object",
-                  properties: {
-                    data: { type: "array", items: { $ref: "#/components/schemas/Note" } },
-                    total: { type: "integer" },
-                  },
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Note" }
                 },
               },
             },
@@ -336,7 +315,7 @@ router.get("/about", (req: Request, res: Response) => {
   res.json({
     name: "Abhishek",
     email: "your@email.com",
-    my_features: {
+    "my features": {
       note_pinning: "Mark important notes to keep them at the top of the list.",
       soft_delete: "Notes are flagged as deleted instead of being immediately removed, allowing for data recovery.",
       tagging: "User-scoped categorization system for organizing and filtering notes.",

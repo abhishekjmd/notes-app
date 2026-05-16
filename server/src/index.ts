@@ -16,15 +16,12 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/notes", notesRoutes);
-app.use("/api/tags", tagsRoutes);
-app.use("/api/search", searchRoutes);
-app.use("/", metaRoutes);
-
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
-});
+app.use("/", metaRoutes);        // /about, /openapi.json
+app.use("/", authRoutes);        // /register, /login
+app.use("/notes", notesRoutes);  // /notes, /notes/:id
+app.use("/tags", tagsRoutes);    // /tags
+app.use("/search", searchRoutes);// /search?q=
+app.get("/health", (req, res) => res.status(200).json({ status: "ok" }));
 
 // Error handling
 app.use(notFound);
