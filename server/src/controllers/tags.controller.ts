@@ -38,7 +38,7 @@ export const createTag = async (req: Request, res: Response) => {
     return res.status(201).json(tag);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.errors[0].message });
+      return res.status(400).json({ message: error.issues[0].message });
     }
     console.error("Create tag error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -62,7 +62,7 @@ export const getTags = async (req: Request, res: Response) => {
 
 export const attachTagToNote = async (req: Request, res: Response) => {
   try {
-    const { id: noteId } = req.params;
+    const noteId = req.params.id as string;
     const userId = req.user!.userId;
     const { tag_id } = attachTagSchema.parse(req.body);
 
@@ -108,7 +108,7 @@ export const attachTagToNote = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Tag attached successfully" });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.errors[0].message });
+      return res.status(400).json({ message: error.issues[0].message });
     }
     console.error("Attach tag error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -117,7 +117,8 @@ export const attachTagToNote = async (req: Request, res: Response) => {
 
 export const removeTagFromNote = async (req: Request, res: Response) => {
   try {
-    const { id: noteId, tagId } = req.params;
+    const noteId = req.params.id as string;
+    const tagId = req.params.tagId as string;
     const userId = req.user!.userId;
 
     // Verify note ownership

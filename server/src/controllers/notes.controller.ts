@@ -75,7 +75,7 @@ export const getNotes = async (req: Request, res: Response) => {
 
 export const getNoteById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = req.user!.userId;
 
     const note = await prisma.note.findFirst({
@@ -119,7 +119,7 @@ export const createNote = async (req: Request, res: Response) => {
     return res.status(201).json(formatNote(note));
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.errors[0].message });
+      return res.status(400).json({ message: error.issues[0].message });
     }
     return handlePrismaError(error, res);
   }
@@ -127,9 +127,14 @@ export const createNote = async (req: Request, res: Response) => {
 
 export const updateNote = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = req.user!.userId;
-    const data = updateNoteSchema.parse(req.body);
+    const body = updateNoteSchema.parse(req.body);
+    const { title, content, isPinned } = body;
+    const data: any = {};
+    if (title !== undefined) data.title = title;
+    if (content !== undefined) data.content = content;
+    if (isPinned !== undefined) data.isPinned = isPinned;
 
     const note = await prisma.note.findUnique({
       where: { id },
@@ -151,7 +156,7 @@ export const updateNote = async (req: Request, res: Response) => {
     return res.status(200).json(formatNote(updatedNote));
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.errors[0].message });
+      return res.status(400).json({ message: error.issues[0].message });
     }
     return handlePrismaError(error, res);
   }
@@ -159,7 +164,7 @@ export const updateNote = async (req: Request, res: Response) => {
 
 export const deleteNote = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = req.user!.userId;
 
     const note = await prisma.note.findUnique({
@@ -187,7 +192,7 @@ export const deleteNote = async (req: Request, res: Response) => {
 
 export const shareNote = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = req.user!.userId;
     const { share_with_email } = shareSchema.parse(req.body);
 
@@ -238,7 +243,7 @@ export const shareNote = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Note shared successfully" });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.errors[0].message });
+      return res.status(400).json({ message: error.issues[0].message });
     }
     return handlePrismaError(error, res);
   }

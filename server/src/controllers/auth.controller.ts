@@ -31,7 +31,7 @@ export const register = async (req: Request, res: Response) => {
     return res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.errors[0].message });
+      return res.status(400).json({ message: error.issues[0].message });
     }
     return handlePrismaError(error, res);
   }
@@ -60,7 +60,7 @@ export const login = async (req: Request, res: Response) => {
     return res.status(200).json({ access_token: token });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.errors[0].message });
+      return res.status(400).json({ message: error.issues[0].message });
     }
     return handlePrismaError(error, res);
   }
