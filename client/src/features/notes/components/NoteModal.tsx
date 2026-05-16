@@ -11,13 +11,17 @@ interface NoteModalProps {
   initialData?: Note | null;
 }
 
-export const NoteModal: React.FC<NoteModalProps> = ({ 
-  isOpen, onClose, onSuccess, initialData 
-}) => {
+const inputBase = `
+  w-full rounded-xl px-4 text-sm text-foreground
+  transition-all duration-200 focus:outline-none input-glow
+`.trim();
+
+export const NoteModal: React.FC<NoteModalProps> = ({ isOpen, onClose, onSuccess, initialData }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isEdit = !!initialData;
 
   useEffect(() => {
     if (initialData) {
@@ -27,22 +31,18 @@ export const NoteModal: React.FC<NoteModalProps> = ({
       setTitle('');
       setContent('');
     }
+    setError(null);
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
-      setError('Title is required');
-      return;
-    }
-
+    if (!title.trim()) { setError('Title is required'); return; }
     setLoading(true);
     setError(null);
-
     try {
-      if (initialData) {
+      if (isEdit && initialData) {
         await updateNote(initialData.id, { title, content });
       } else {
         await createNote({ title, content });
@@ -57,49 +57,130 @@ export const NoteModal: React.FC<NoteModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-card border border-border shadow-2xl rounded-2xl p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">{initialData ? 'Edit Note' : 'New Note'}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 transition-opacity duration-200"
+        style={{ background: 'rgba(5,5,10,0.75)', backdropFilter: 'blur(8px)' }}
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div
+        className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden animate-fade-in-scale"
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05)',
+        }}
+      >
+        {/* Gradient accent top */}
+        <div className="h-[1px] w-full"
+          style={{ background: 'linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent)' }} />
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div>
+            <h2 className="text-lg font-bold text-foreground">
+              {isEdit ? 'Edit Note' : 'New Note'}
+            </h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--foreground-muted)' }}>
+              {isEdit ? 'Update your note below' : 'Capture your thoughts quickly'}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-150"
+            style={{ color: 'var(--foreground-muted)', background: 'var(--surface-raised)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--foreground)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--foreground-muted)'; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <div className="bg-destructive/10 border border-destructive/20 text-destructive text-xs p-3 rounded-lg">{error}</div>}
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs"
+              style={{ background: 'var(--destructive-bg)', border: '1px solid var(--destructive-border)', color: 'var(--destructive)' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {error}
+            </div>
+          )}
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Title</label>
+          <div>
             <input
               type="text"
-              className="w-full h-11 bg-muted/50 border-none rounded-xl px-4 focus:ring-2 focus:ring-primary transition-all"
-              placeholder="Give your note a title..."
+              autoFocus
+              placeholder="Note title…"
+              className={`${inputBase} h-11 font-semibold text-base`}
+              style={{
+                background: 'var(--surface-raised)',
+                border: '1px solid var(--border)',
+              }}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               disabled={loading}
+              onFocus={e => (e.currentTarget.style.borderColor = 'var(--primary)')}
+              onBlur={e => (e.currentTarget.style.borderColor = 'var(--border)')}
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Content</label>
+          <div>
             <textarea
-              className="w-full h-40 bg-muted/50 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary transition-all resize-none"
-              placeholder="Write your thoughts..."
+              placeholder="What's on your mind?"
+              rows={6}
+              className={`${inputBase} py-3 resize-none`}
+              style={{
+                background: 'var(--surface-raised)',
+                border: '1px solid var(--border)',
+                lineHeight: '1.6',
+              }}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               disabled={loading}
+              onFocus={e => (e.currentTarget.style.borderColor = 'var(--primary)')}
+              onBlur={e => (e.currentTarget.style.borderColor = 'var(--border)')}
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-12 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
-          >
-            {loading ? <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" /> : 'Save Note'}
-          </button>
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 h-11 rounded-xl text-sm font-medium transition-all duration-150"
+              style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', color: 'var(--foreground-muted)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--foreground)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--foreground-muted)'; }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-press flex-1 h-11 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)', boxShadow: loading ? 'none' : '0 0 20px var(--primary-glow)' }}
+            >
+              {loading ? (
+                <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              ) : isEdit ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Save Changes
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Create Note
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>
