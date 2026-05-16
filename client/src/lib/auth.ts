@@ -1,3 +1,5 @@
+import { jwtDecode } from 'jwt-decode';
+
 export const saveToken = (token: string) => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('access_token', token);
@@ -19,4 +21,15 @@ export const removeToken = () => {
 
 export const isLoggedIn = (): boolean => {
   return !!getToken();
+};
+
+export const getCurrentUserId = (): string | null => {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const decoded: any = jwtDecode(token);
+    return decoded.id || decoded.sub || null;
+  } catch (error) {
+    return null;
+  }
 };

@@ -14,7 +14,12 @@ export const useNotes = () => {
     setError(null);
     try {
       const data = query ? await searchNotes(query) : await getNotes();
-      setNotes(data);
+      const sortedData = [...data].sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      setNotes(sortedData);
     } catch (err: any) {
       setError('Failed to load notes');
     } finally {

@@ -4,18 +4,57 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isLoggedIn } from '@/lib/auth';
 import { Navbar } from '@/components/layout/Navbar';
-import { NoteGrid, SearchBar, NoteModal, useNotes } from '@/features/notes';
+import { 
+  NoteGrid, SearchBar, NoteModal, ConfirmModal, ShareModal, 
+  useNotes, updateNote, deleteNote 
+} from '@/features/notes';
+import { Note } from '@/types';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { notes, loading, fetchNotes } = useNotes();
+  
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  
+  const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const [sharingNoteId, setSharingNoteId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn()) {
       router.replace('/login');
     }
   }, [router]);
+
+  const handleEdit = (note: Note) => {
+    setEditingNote(note);
+    setIsNoteModalOpen(true);
+  };
+
+  const handleTogglePin = async (id: string, isPinned: boolean) => {
+    try {
+      await updateNote(id, { isPinned });
+      fetchNotes();
+    } catch (error) {
+      console.error('Failed to toggle pin', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingNoteId) return;
+    setIsDeleting(true);
+    try {
+      await deleteNote(deletingNoteId);
+      setDeletingNoteId(null);
+      fetchNotes();
+    } catch (error) {
+      console.error('Failed to delete note', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (!isLoggedIn()) return null;
 
@@ -31,8 +70,8 @@ export default function DashboardPage() {
           </div>
           
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
+            onClick={() => { setEditingNote(null); setIsNoteModalOpen(true); }}
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -45,13 +84,36 @@ export default function DashboardPage() {
           <SearchBar onSearch={(query) => fetchNotes(query)} />
         </div>
 
-        <NoteGrid notes={notes} loading={loading} />
+        <NoteGrid 
+          notes={notes} 
+          loading={loading} 
+          onEdit={handleEdit}
+          onDelete={(id) => setDeletingNoteId(id)}
+          onTogglePin={handleTogglePin}
+          onShare={(id) => setSharingNoteId(id)}
+        />
       </main>
 
       <NoteModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSuccess={() => fetchNotes()} 
+        isOpen={isNoteModalOpen} 
+        onClose={() => { setIsNoteModalOpen(false); setEditingNote(null); }} 
+        onSuccess={() => fetchNotes()}
+        initialData={editingNote}
+      />
+
+      <ConfirmModal
+        isOpen={!!deletingNoteId}
+        title="Delete Note"
+        message="Are you sure you want to delete this note? This action cannot be undone."
+        onConfirm={handleDelete}
+        onClose={() => setDeletingNoteId(null)}
+        loading={isDeleting}
+      />
+
+      <ShareModal
+        isOpen={!!sharingNoteId}
+        noteId={sharingNoteId || ''}
+        onClose={() => setSharingNoteId(null)}
       />
     </div>
   );

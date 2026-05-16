@@ -6,9 +6,15 @@ import { SkeletonNote } from './SkeletonNote';
 interface NoteGridProps {
   notes: Note[];
   loading: boolean;
+  onEdit: (note: Note) => void;
+  onDelete: (id: string) => void;
+  onTogglePin: (id: string, isPinned: boolean) => void;
+  onShare: (id: string) => void;
 }
 
-export const NoteGrid: React.FC<NoteGridProps> = ({ notes, loading }) => {
+export const NoteGrid: React.FC<NoteGridProps> = ({ 
+  notes, loading, onEdit, onDelete, onTogglePin, onShare 
+}) => {
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -39,7 +45,14 @@ export const NoteGrid: React.FC<NoteGridProps> = ({ notes, loading }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {notes.map((note) => (
-        <NoteCard key={note.id} note={note} />
+        <NoteCard 
+          key={note.id} 
+          note={note} 
+          onEdit={onEdit} 
+          onDelete={onDelete} 
+          onTogglePin={onTogglePin} 
+          onShare={onShare} 
+        />
       ))}
     </div>
   );
