@@ -6,6 +6,8 @@ import notesRoutes from "./routes/notes.routes";
 import tagsRoutes from "./routes/tags.routes";
 import searchRoutes from "./routes/search.routes";
 import metaRoutes from "./routes/meta.routes";
+import { notFound } from "./middlewares/notFound";
+import { errorHandler } from "./middlewares/errorHandler";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,6 +25,10 @@ app.use("/", metaRoutes);
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
 });
+
+// Error handling
+app.use(notFound);
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

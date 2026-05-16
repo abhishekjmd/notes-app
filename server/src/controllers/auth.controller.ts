@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { hashPassword, comparePassword } from "../utils/hash";
 import { signToken } from "../utils/jwt";
+import { handlePrismaError } from "../utils/prismaErrors";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -18,14 +19,6 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { email, password } = registerSchema.parse(req.body);
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
-      return res.status(409).json({ message: "Email already exists" });
-    }
-
     const hashedPassword = await hashPassword(password);
 
     await prisma.user.create({
@@ -40,8 +33,7 @@ export const register = async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: error.errors[0].message });
     }
-    console.error("Register error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return handlePrismaError(error, res);
   }
 };
 
@@ -70,7 +62,6 @@ export const login = async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: error.errors[0].message });
     }
-    console.error("Login error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return handlePrismaError(error, res);
   }
 };

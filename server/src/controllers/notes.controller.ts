@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
+import { handlePrismaError } from "../utils/prismaErrors";
 
 const noteSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -64,8 +65,7 @@ export const getNotes = async (req: Request, res: Response) => {
       limit,
     });
   } catch (error) {
-    console.error("Get notes error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return handlePrismaError(error, res);
   }
 };
 
@@ -94,8 +94,7 @@ export const getNoteById = async (req: Request, res: Response) => {
 
     return res.status(200).json(note);
   } catch (error) {
-    console.error("Get note by id error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return handlePrismaError(error, res);
   }
 };
 
@@ -118,8 +117,7 @@ export const createNote = async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: error.errors[0].message });
     }
-    console.error("Create note error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return handlePrismaError(error, res);
   }
 };
 
@@ -151,8 +149,7 @@ export const updateNote = async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: error.errors[0].message });
     }
-    console.error("Update note error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return handlePrismaError(error, res);
   }
 };
 
@@ -180,8 +177,7 @@ export const deleteNote = async (req: Request, res: Response) => {
 
     return res.status(204).send();
   } catch (error) {
-    console.error("Delete note error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return handlePrismaError(error, res);
   }
 };
 
@@ -240,7 +236,6 @@ export const shareNote = async (req: Request, res: Response) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ message: error.errors[0].message });
     }
-    console.error("Share note error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return handlePrismaError(error, res);
   }
 };
