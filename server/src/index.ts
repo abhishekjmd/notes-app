@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth.routes";
 import notesRoutes from "./routes/notes.routes";
 import tagsRoutes from "./routes/tags.routes";
 import searchRoutes from "./routes/search.routes";
+import metaRoutes from "./routes/meta.routes";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -17,6 +18,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
 app.use("/api/tags", tagsRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/", metaRoutes);
 
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
