@@ -119,7 +119,7 @@ export const createNote = async (req: Request, res: Response) => {
     return res.status(201).json(formatNote(note));
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.issues[0].message });
+      return res.status(400).json({ message: error.issues?.[0]?.message ?? "Validation error" });
     }
     return handlePrismaError(error, res);
   }
@@ -156,7 +156,7 @@ export const updateNote = async (req: Request, res: Response) => {
     return res.status(200).json(formatNote(updatedNote));
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.issues[0].message });
+      return res.status(400).json({ message: error.issues?.[0]?.message ?? "Validation error" });
     }
     return handlePrismaError(error, res);
   }
@@ -243,7 +243,7 @@ export const shareNote = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Note shared successfully" });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.issues[0].message });
+      return res.status(400).json({ message: error.issues?.[0]?.message ?? "Validation error" });
     }
     return handlePrismaError(error, res);
   }

@@ -38,7 +38,7 @@ export const createTag = async (req: Request, res: Response) => {
     return res.status(201).json(tag);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.issues[0].message });
+      return res.status(400).json({ message: error.issues?.[0]?.message ?? "Validation error" });
     }
     console.error("Create tag error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -108,7 +108,7 @@ export const attachTagToNote = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Tag attached successfully" });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: error.issues[0].message });
+      return res.status(400).json({ message: error.issues?.[0]?.message ?? "Validation error" });
     }
     console.error("Attach tag error:", error);
     return res.status(500).json({ message: "Internal server error" });
